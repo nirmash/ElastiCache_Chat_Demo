@@ -1,0 +1,19 @@
+FROM envoyproxy/envoy-alpine-dev:latest
+
+RUN apk update && apk add python3 bash curl redis
+RUN pip3 install -q Flask==0.11.1 requests==2.18.4 redis json2html pymysql datetime
+RUN mkdir /code
+RUN mkdir /code/chat
+RUN mkdir /code/chat/static
+RUN mkdir /code/chat/static/js
+RUN mkdir /code/chat/static/styles
+RUN mkdir /code/chat/templates
+
+ADD ./run-server.sh /code
+ADD ./setup.py /code
+ADD /chat/__init__.py /code/chat
+ADD /chat/service.py /code/chat
+ADD /chat/static/styles/index.css code/chat/static/styles
+ADD /chat/templates/index.html code/chat/templates
+RUN chmod u+x /code/run-server.sh
+ENTRYPOINT /code/run-server.sh

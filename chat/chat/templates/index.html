@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Chat Client</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <h2>Redis based chat</h2>
+            <div class="col-sm" style="text-align: left;">
+                User name: <input type="text" id="user-input" value="default_user"></input>
+            </div>
+            <p></p>
+        </div>
+        <div class="row">
+            <div class="col-sm" style="height:fit-content; text-align: left;background-color: lightgrey;width: 300px;border: 0.5px solid black;padding: 10px;margin: 2px;">
+                <div id="messages">
+                    <table id="log_tbl">
+                    </table>
+                </div>
+            </div>
+            <p></p>
+        </div>
+        <div class="row">
+            <div class="col-sm" style="height:fit-content; text-align: left;background-color: lightgrey;width: 300px;border: 0.5px solid black;padding: 10px;">
+                <input type="text" id="message-input" onchange="sendMessage()" size="130"/>
+                <button onclick="sendMessage()">Send</button> 
+            </div>
+            <p></p>
+        </div>
+    </div>
+	<script>
+        window.onload = function() {
+            window.chat_session_id = 'mega_sesh';
+            startSession('mega_sesh');
+        }
+
+        function get_BaseURL(){
+            return window.location.origin + '/';
+        }
+
+        function startSession(session_id){
+            const request = new XMLHttpRequest();
+            const base_url=get_BaseURL()+'start_session/'+session_id;
+            request.open("GET", base_url);
+            request.send();
+        }
+
+        function sendMessage() {
+            const message = getControlText('message-input');
+            const user = getControlText('user-input');
+			const requestPayload = JSON.stringify({
+				user_id: user,
+				msg_txt: message
+            });
+            const request = new XMLHttpRequest();
+            const base_url=get_BaseURL()+'send_message/'+window.chat_session_id;
+            request.open("POST", base_url);
+            request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            request.send(requestPayload);
+            request.onreadystatechange = function() {
+            let data = request.response;
+            if (data != ''){
+                    make_msg_ux('log_tbl',JSON.parse(unescape(data)));
+                    document.getElementById('message-input').value='';
+                }
+            }    
+        }
+
+        function make_msg_ux(tbl, data){
+            document.getElementById(tbl).innerHTML = make_table(data, ['',''], ['user_id','msg_txt'],['<b>|</b>:','&nbsp;&nbsp;&nbsp;&nbsp;<i>|</i>'])
+        }
+
+        function make_table (data, titles, fields, formats){
+            response = "<tr>";
+            for(ii=0; ii<titles.length; ii++){
+                response += "<th>" + titles[ii] + "</th>";
+            }
+            response += "</tr>";
+            for(ii=0; ii<data.length; ii++){
+                var line = JSON.parse(data[ii]);
+                response += "<tr>";
+                for(jj=0; jj<fields.length; jj++){
+                    formats_line = formats[jj].split("|");
+                    response += "<td>" + formats_line[0] + line[fields[jj]] + formats_line[1] + "</td>";
+                }
+                response += "</tr>";
+            }
+            return response;
+        }
+
+        function refreshSession(){
+            if(window.chat_session_id=='')
+                return;
+            const request = new XMLHttpRequest();
+            const base_url=get_BaseURL()+'get_messages/'+window.chat_session_id;
+            request.open("GET", base_url);
+            request.send();
+            request.onreadystatechange = function() {
+            let data = request.response;
+            if (data != '' && data != 'empty list'){
+                    make_msg_ux('log_tbl',JSON.parse(unescape(data)));
+                }
+                else{
+                    var Table = document.getElementById("log_tbl");
+                    Table.innerHTML = "";                    
+                }
+            }                
+        }
+
+        function getControlText(ctl){
+            const ctrl = document.getElementById(ctl);
+            return ctrl.value.trim();
+        }
+        window.setInterval(refreshSession, 200)
+	</script>
+	
+</body>
+</html>
