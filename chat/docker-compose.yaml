@@ -25,8 +25,8 @@ services:
     environment:
       - REDIS_MASTER_HOST=${REDIS_MASTER_HOST}
       - REDIS_MASTER_PORT=${REDIS_MASTER_PORT}      
-      - FLASK_ENV=development
-      - PYTHONPATH=/code
+      - FLASK_ENV=${FLASK_ENV}
+      - PYTHONPATH=${PYTHONPATH}
     expose: 
       - 80
     ports:
