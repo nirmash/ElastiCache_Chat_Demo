@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile-redis
     networks:
-      envoymesh:
+      demo_net:
         aliases:
           - redis_server
     expose:
@@ -19,7 +19,7 @@ services:
       context: .
       dockerfile: Dockerfile-service
     networks:
-      envoymesh:
+      demo_net:
         aliases:
           - service
     environment:
@@ -33,4 +33,4 @@ services:
       - 80:80
 
 networks:
-  envoymesh: {}
+  demo_net: {}
